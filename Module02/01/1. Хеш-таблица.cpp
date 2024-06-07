@@ -1,3 +1,9 @@
+// Реализуйте структуру данных типа “множество строк” на основе динамической хеш-таблицы с открытой адресацией.
+// Хранимые строки непустые и состоят из строчных латинских букв.
+// Хеш-функция строки должна быть реализована с помощью вычисления значения многочлена методом Горнера.
+// Начальный размер таблицы должен быть равным 8-ми. Перехеширование выполняйте при добавлении элементов в случае,
+//  когда коэффициент заполнения таблицы достигает 3/4.
+
 #include <cassert>
 #include <iostream>
 #include <string>
@@ -35,7 +41,7 @@ class HashTable {
     unsigned int keysCount;
     unsigned int keysDeleted;
 
-    void growTable();
+    void growTable(int new_size);
 };
 
 template <class T, class H, class H2>
@@ -85,9 +91,13 @@ bool HashTable<T, H, H2>::Has(const T &key) {
 
 template <class T, class H, class H2>
 bool HashTable<T, H, H2>::Add(const T &key) {
-    if (keysCount > 0.6 * table.size() || keysDeleted > 0.3 * table.size()) {
-        growTable();
+    if ( keysDeleted > 0.3 * table.size()) {
+        growTable(table.size());
     }
+    if (keysCount > 0.6 * table.size()) {
+        growTable(table.size() * 2);
+    }
+
     unsigned int hash = hasher(key) % table.size();
     int firstDeleted = -1;
     while (true) {
@@ -140,8 +150,9 @@ bool HashTable<T, H, H2>::Delete(const T &key) {
 }
 
 template <class T, class H, class H2>
-void HashTable<T, H, H2>::growTable() {
-    std::vector<HashTableCell> newTable(table.size() * 2, HashTableCell());
+void HashTable<T, H, H2>::growTable(int new_size) {
+    std::vector<HashTableCell> newTable(new_size, HashTableCell());
+
     for (int i = 0; i < table.size(); ++i) {
         if (table[i].State == Deleted || table[i].State == Empty) {
             continue;
@@ -184,7 +195,7 @@ struct StringHasher2 {
 int main() {
     StringHasher hasher;
     StringHasher2 hasher2;
-    HashTable<std::string, StringHasher, StringHasher2> table(2, hasher, hasher2);
+    HashTable<std::string, StringHasher, StringHasher2> table(8, hasher, hasher2);
     char operation = 0;
     std::string word;
     while (std::cin >> operation >> word) {
